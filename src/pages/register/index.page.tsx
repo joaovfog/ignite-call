@@ -5,6 +5,8 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 
+import { api } from '@/lib/axios'
+
 import { useRouter } from 'next/router'
 
 import { Container, Form, FormError, Header } from './styles'
@@ -37,7 +39,14 @@ export default function Register() {
   const router = useRouter()
 
   async function handleRegister(data: RegisterFormData) {
-    console.log(data)
+    try {
+      await api.post('/users', {
+        name: data.name,
+        username: data.username,
+      })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   useEffect(() => {

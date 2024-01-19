@@ -32,8 +32,10 @@ export default async function handler(
   const isPastDate = referenceDate.endOf('day').isBefore(new Date())
 
   if (isPastDate) {
-    return res.json({ availability: [] })
+    return res.json({ possibleTimes: [], availableTimes: [] })
   }
+
+  console.log(user)
 
   const userAvailability = await prisma.userTimeInterval.findFirst({
     where: {
@@ -43,7 +45,7 @@ export default async function handler(
   })
 
   if (!userAvailability) {
-    return res.json({ availability: [] })
+    return res.json({ possibleTimes: [], availableTimes: [] })
   }
 
   const { time_start_in_minutes, time_end_in_minutes } = userAvailability
@@ -57,5 +59,24 @@ export default async function handler(
     },
   )
 
-  return res.json({ possibleTimes })
+  const blockedTimes = await prisma.scheduling.findMany({
+    select: {
+      date: true,
+    },
+    where: {
+      user_id: user.id,
+      date: {
+        gte: referenceDate.set('hour', startHour).toDate(),
+        lte: referenceDate.set('hour', endHour).toDate(),
+      },
+    },
+  })
+
+  const availableTimes = possibleTimes.filter((time) => {
+    return !blockedTimes.some(
+      (blockedTime) => blockedTime.date.getHours() === time,
+    )
+  })
+
+  return res.json({ possibleTimes, availableTimes })
 }

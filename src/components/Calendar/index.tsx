@@ -28,13 +28,11 @@ interface CalendarWeek {
     disabled: boolean
   }>
 }
+type CalendarWeeks = CalendarWeek[]
 
 interface BlockedDates {
   blockedWeekDays: number[]
 }
-
-type CalendarWeeks = CalendarWeek[]
-
 interface CalendarProps {
   selectedDate: Date | null
   onDateSelected: (date: Date) => void
@@ -48,10 +46,19 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
 
   const router = useRouter()
 
+  function handlePreviousMonth() {
+    const previousMonth = currentDate.subtract(1, 'month')
+    setCurrentDate(previousMonth)
+  }
+
+  function handleNextMonth() {
+    const nextMonth = currentDate.add(1, 'month')
+    setCurrentDate(nextMonth)
+  }
+
   const shortWeekDays = getWeekDays({ short: true })
   const currentMonth = currentDate.format('MMMM')
   const currentYear = currentDate.format('YYYY')
-
   const username = String(router.query.username)
 
   const { data: blockedDates } = useQuery<BlockedDates>({
@@ -64,7 +71,7 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
       const response = await api.get(`/users/${username}/blocked-dates`, {
         params: {
           year: currentDate.get('year'),
-          month: currentDate.get('month'),
+          month: currentDate.get('month') + 1,
         },
       })
 
@@ -86,7 +93,6 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
 
     const firstWeekDay = currentDate.get('day')
 
-    // days of the previous month
     const previousMonthFillArray = Array.from({
       length: firstWeekDay,
     })
@@ -117,7 +123,7 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
           date,
           disabled:
             date.endOf('day').isBefore(new Date()) ||
-            blockedDates.blockedWeekDays.includes(date.get('day')),
+            blockedDates?.blockedWeekDays?.includes(date.get('day')),
         }
       }),
       ...nextMonthFillArray.map((date) => {
@@ -128,14 +134,12 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
     const calendarWeeks = calendarDays.reduce<CalendarWeeks>(
       (weeks, _, i, original) => {
         const isNewWeek = i % 7 === 0
-
         if (isNewWeek) {
           weeks.push({
             week: i / 7 + 1,
             days: original.slice(i, i + 7),
           })
         }
-
         return weeks
       },
       [],
@@ -144,23 +148,12 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
     return calendarWeeks
   }, [currentDate, blockedDates])
 
-  function handlePreviousMonth() {
-    const previousMonthDate = currentDate.subtract(1, 'month')
-    setCurrentDate(previousMonthDate)
-  }
-
-  function handleNextMonth() {
-    const previousMonthDate = currentDate.add(1, 'month')
-    setCurrentDate(previousMonthDate)
-  }
-
   return (
     <CalendarContainer>
       <CalendarHeader>
         <CalendarTitle>
           {currentMonth} <span>{currentYear}</span>
         </CalendarTitle>
-
         <CalendarActions>
           <button onClick={handlePreviousMonth} title="Previous month">
             <CaretLeft />
@@ -170,7 +163,6 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
           </button>
         </CalendarActions>
       </CalendarHeader>
-
       <CalendarBody>
         <thead>
           <tr>

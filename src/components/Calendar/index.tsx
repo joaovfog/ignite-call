@@ -28,11 +28,14 @@ interface CalendarWeek {
     disabled: boolean
   }>
 }
+
 type CalendarWeeks = CalendarWeek[]
 
 interface BlockedDates {
   blockedWeekDays: number[]
+  blockedDates: number[]
 }
+
 interface CalendarProps {
   selectedDate: Date | null
   onDateSelected: (date: Date) => void
@@ -81,9 +84,9 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
   })
 
   const calendarWeeks = useMemo(() => {
-    if (!blockedDates) {
-      return []
-    }
+    // if (!blockedDates) {
+    //   return []
+    // }
 
     const daysInMonthArray = Array.from({
       length: currentDate.daysInMonth(),
@@ -105,7 +108,6 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
       'date',
       currentDate.daysInMonth(),
     )
-
     const lastWeekDay = lastDayInCurrentMonth.get('day')
 
     const nextMonthFillArray = Array.from({
@@ -123,7 +125,8 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
           date,
           disabled:
             date.endOf('day').isBefore(new Date()) ||
-            blockedDates?.blockedWeekDays?.includes(date.get('day')),
+            blockedDates?.blockedWeekDays?.includes(date.get('day')) ||
+            blockedDates?.blockedDates?.includes(date.get('date')),
         }
       }),
       ...nextMonthFillArray.map((date) => {
@@ -134,12 +137,14 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
     const calendarWeeks = calendarDays.reduce<CalendarWeeks>(
       (weeks, _, i, original) => {
         const isNewWeek = i % 7 === 0
+
         if (isNewWeek) {
           weeks.push({
             week: i / 7 + 1,
             days: original.slice(i, i + 7),
           })
         }
+
         return weeks
       },
       [],

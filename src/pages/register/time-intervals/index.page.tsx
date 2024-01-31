@@ -10,6 +10,7 @@ import {
 import { ArrowRight } from 'phosphor-react'
 
 import { useRouter } from 'next/router'
+import { NextSeo } from 'next-seo'
 
 import { api } from '@/lib/axios'
 
@@ -116,6 +117,7 @@ export default function TimeIntervals() {
 
   return (
     <>
+      <NextSeo title="Selecione sua disponibilidade | Ignite Call" noindex />
       <Container>
         <Header>
           <Heading as="strong">Quase lá</Heading>
